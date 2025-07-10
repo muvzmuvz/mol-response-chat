@@ -1,4 +1,3 @@
-// chat.gateway.ts
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -15,14 +14,13 @@ import { JwtService } from '@nestjs/jwt';
 import { UseGuards } from '@nestjs/common';
 import { WsAuthGuard } from './ws-auth.guard';
 
-// Функция для исправления возможной неправильной кодировки строки
+// Функция исправления кодировки (если нужно)
 function fixEncoding(str: string): string {
-  // Перекодируем из latin1 (искажённые байты) в utf8
   return Buffer.from(str, 'latin1').toString('utf8');
 }
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: { origin: '*' }, // Для разработки разрешаем все
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -40,16 +38,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const payload = this.jwtService.verify(token);
 
-      // НЕ перекодируем username здесь, используем как есть
-      const username = payload.username;
+      const userId = payload.sub;   // ID пользователя из JWT
+      const username = payload.username.normalize('NFC'); // Имя пользователя
 
       (client as any).user = {
-        id: payload.sub,
+        id: userId,
         username,
         role: payload.role,
       };
 
-      console.log(`Client connected: ${client.id}, user: ${username}`);
+      console.log(`Client connected: ${client.id}, userId: ${userId}, username: ${username}`);
     } catch (e) {
       console.log('Token validation error:', e.message);
       client.emit('error', 'Authentication failed');
@@ -72,11 +70,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const messageWithUser = {
       ...message,
       username: user.username,
+      userId: user.id,
     };
 
-    console.log('Отправляем сообщение от:', user.username, 'текст:', message.text);
-
     const saved = await this.chatService.saveMessage(messageWithUser);
+
     this.server.emit('newMessage', saved);
   }
 
@@ -93,15 +91,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() username: string,
     @ConnectedSocket() client: Socket,
   ) {
-    console.log(`Получено событие typing (исходные данные): ${username} тип: ${typeof username}`);
-
-    // Перекодируем только тут — потому что от клиента приходит в искажённой кодировке
     const fixedUsername = fixEncoding(username);
 
-    console.log(`Исправленное имя пользователя для typing: ${fixedUsername}`);
+    // Просто нормализуем и убираем пробелы по краям, не трогаем остальное
+    const normalizedUsername = fixedUsername.normalize('NFC').trim();
 
-    client.broadcast.emit('typing', fixedUsername);
-
-    console.log(`Отправлено событие typing всем остальным: ${fixedUsername}`);
+    if (normalizedUsername) {
+      client.broadcast.emit('typing', normalizedUsername);
+    }
   }
 }

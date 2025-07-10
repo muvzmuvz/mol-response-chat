@@ -28,6 +28,13 @@ export class ChatService {
 
       this.socket.on('connect_error', (error) => {
         console.error('Ошибка WebSocket:', error);
+        // Попытка переподключения с новым токеном
+        setTimeout(() => {
+          this.socket.io.opts.query = {
+            token: localStorage.getItem('access_token') || ''
+          };
+          this.socket.connect();
+        }, 1000);
       });
     }
   }

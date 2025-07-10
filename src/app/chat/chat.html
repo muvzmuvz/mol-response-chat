@@ -1,20 +1,14 @@
-
-<html>
-    <meta charset="UTF-8">
-</html>
-
 <div class="chat-container">
   <h2>Чат</h2>
 
   <div *ngIf="isNamed">
-
     <div class="messages" #messagesContainer
       style="max-height: 500px; min-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
       <div *ngFor="let msg of messages; let i = index" class="message" [id]="'msg-' + i" [ngClass]="{
-             'user': msg.username === username,
-             'other': msg.username !== username,
-             'highlighted': highlightedMessageIndex === i
-           }" (contextmenu)="onRightClick($event, i)">
+              user: isMyMessage(msg.userId),
+              other: !isMyMessage(msg.userId),
+              highlighted: highlightedMessageIndex === i
+            }" (contextmenu)="onRightClick($event, i)">
 
         <strong>{{ msg.username }}:</strong>
         <div>{{ msg.text }}</div>
@@ -50,6 +44,5 @@
     <div class="typing-indicator" *ngIf="typingUsers.size > 0">
       <em>{{ array.from(typingUsers).join(', ') }} печатает...</em>
     </div>
-
   </div>
 </div>

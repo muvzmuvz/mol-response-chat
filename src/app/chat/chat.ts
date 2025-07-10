@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   messages: {
+    userId: string;       // Добавлен userId
     username: string;
     text: string;
     timestamp?: string;
@@ -23,6 +24,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   newMessage = '';
   username = '';
+  userId = '';  // Добавляем userId текущего пользователя
   isNamed = false;
 
   typingUsers: Set<string> = new Set();
@@ -41,18 +43,27 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   constructor(private chatService: ChatService, private auth: AuthService, private router: Router) { }
 
   ngOnInit(): void {
+    if (!this.auth.isLoggedIn()) {
+      this.auth.logout();
+      return;
+    }
+
     const username = this.auth.getUsernameFromToken();
-    if (!username) {
+    const userId = this.auth.getUserIdFromToken();  // Метод должен возвращать ID из токена
+    if (!username || !userId) {
       this.router.navigate(['/login']);
       return;
     }
 
-    this.username = username;
+    this.username = this.normalizeUsername(username);
+    this.userId = userId;
     this.isNamed = true;
 
     this.subscriptions.push(
       this.chatService.onNewMessage().subscribe((msg) => {
         if (msg) {
+          // Сообщение уже содержит userId, username
+          msg.username = this.normalizeUsername(msg.username);
           this.messages.push(msg);
           this.shouldScroll = true;
           this.showReplyButtonIndex = null;
@@ -60,33 +71,33 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       }),
       this.chatService.onAllMessages().subscribe((msgs) => {
         if (msgs) {
-          this.messages = msgs;
+          this.messages = msgs.map(msg => ({
+            ...msg,
+            username: this.normalizeUsername(msg.username),
+          }));
           this.shouldScroll = true;
         }
       }),
       this.chatService.onTyping().subscribe((usernameTyping: any) => {
-        console.log('Получено событие typing (исходные данные):', usernameTyping, 'тип:', typeof usernameTyping);
-
         let cleanUsername = usernameTyping;
 
-        // Если приходит не строка, а бинарный буфер (например Uint8Array или ArrayBuffer), декодируем его в строку UTF-8
         if (usernameTyping instanceof Uint8Array || usernameTyping instanceof ArrayBuffer) {
           cleanUsername = new TextDecoder('utf-8').decode(
             usernameTyping instanceof Uint8Array
               ? usernameTyping
               : new Uint8Array(usernameTyping)
           );
-          console.log('Декодированное имя:', cleanUsername);
         }
+
+        cleanUsername = this.normalizeUsername(cleanUsername);
 
         if (cleanUsername && cleanUsername !== this.username) {
           this.typingUsers.add(cleanUsername);
-          // Очищаем таймаут для этого пользователя
+
           if (this.typingTimeouts.has(cleanUsername)) {
             clearTimeout(this.typingTimeouts.get(cleanUsername));
           }
 
-          // Таймаут удаления "печатает" через 3 секунды
           const timeout = setTimeout(() => {
             this.typingUsers.delete(cleanUsername);
             this.typingTimeouts.delete(cleanUsername);
@@ -130,7 +141,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   sendMessage() {
     if (!this.newMessage.trim()) return;
 
-    const message: any = { username: this.username, text: this.newMessage };
+    const message: any = { username: this.username, userId: this.userId, text: this.newMessage };
 
     if (this.replyToList.length) {
       message.replyTo = this.replyToList;
@@ -174,5 +185,19 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.highlightedMessageIndex = null;
       }, 3000);
     }
+  }
+
+  // Нормализация имени (оставляем для совместимости)
+  private normalizeUsername(name: string): string {
+    if (!name) return '';
+    // Нормализуем и просто убираем пробелы по краям
+    return name.normalize('NFC').trim();
+  }
+
+  // Сравниваем userId для определения, чье это сообщение
+  isMyMessage(msgUserId: string): boolean {
+    if (!msgUserId || !this.userId) return false;
+
+    return msgUserId === this.userId;
   }
 }

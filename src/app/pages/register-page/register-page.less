@@ -1,0 +1,87 @@
+.auth-form {
+  width: 360px;           // Ограничиваем ширину, чтобы форма была компактной
+  margin: 60px auto;          // Центрируем форму по горизонтали и даём отступ сверху
+  padding: 30px 25px;         // Внутренние отступы, чтобы элементы не прилегали к краям
+  background: #ffffff;        // Белый фон для чистоты
+  border-radius: 12px;        // Скруглённые углы — выглядит мягче
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);  // Тень для объёма
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 700;
+    font-size: 28px;
+    color: #222;
+  }
+
+  input {
+    display: block;
+    width: 90%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+      outline: none;
+    }
+
+    &::placeholder {
+      color: #999;
+    }
+  }
+
+  button {
+    width: 100%;
+    padding: 14px 0;
+    background-color: #4a90e2;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(74, 144, 226, 0.5);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      background-color: #357ABD;
+      box-shadow: 0 6px 18px rgba(53, 122, 189, 0.7);
+    }
+
+    &:active {
+      background-color: #2a5d9f;
+      box-shadow: none;
+    }
+  }
+
+  .info-text {
+    margin-top: 22px;
+    font-size: 14px;
+    text-align: center;
+    color: #555;
+
+    a {
+      color: #4a90e2;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .message {
+    margin-top: 18px;
+    color: #e74c3c; // Красный цвет для ошибок/сообщений
+    font-size: 15px;
+    text-align: center;
+    font-weight: 600;
+  }
+}

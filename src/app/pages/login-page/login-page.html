@@ -1,0 +1,13 @@
+<app-navbar></app-navbar>
+
+<div class="auth-form">
+    <h2>Вход</h2>
+    <input [(ngModel)]="username" placeholder="Имя пользователя" />
+    <input [(ngModel)]="password" type="password" placeholder="Пароль" />
+    <button (click)="login()">Войти</button>
+    <p class="info-text">
+        Нет аккаунта?
+        <a href="/register">Зарегистрироваться</a>
+    </p>
+    <p *ngIf="error" class="message">{{ error }}</p>
+</div>

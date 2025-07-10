@@ -1,0 +1,60 @@
+.filters-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+
+
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+  }
+}
+
+.custom-select, .custom-input {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 220px;
+  background-color: #ffffff;
+  transition: border-color 0.3s;
+
+  &:focus {
+    border-color: #3b82f6;
+    outline: none;
+  }
+}
+
+.date-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input[type='date'] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--tui-base-03);
+    min-width: 150px;
+  }
+}
+
+.main-table {
+  display: flex;
+  flex-direction: column;
+  padding-left: 40px;
+  justify-content: center;
+  overflow-x: hidden;
+}
+.filters{
+  width: 300px;
+}
+
+.date-range-picker{
+      border-radius: 8px;
+    border: 1px solid var(--tui-base-03);
+}
+

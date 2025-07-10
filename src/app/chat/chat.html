@@ -1,0 +1,18 @@
+<div class="chat-container">
+  <h2>Чат</h2>
+
+
+
+  <div *ngIf="isNamed">
+    <div class="messages" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+      <div *ngFor="let msg of messages" class="message" [ngClass]="msg.username === username ? 'user' : 'other'">
+        <strong>{{ msg.username }}:</strong> {{ msg.text }}
+      </div>
+    </div>
+
+    <div class="input" style="margin-top: 10px;">
+      <input [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" placeholder="Введите сообщение..." />
+      <button (click)="sendMessage()">Отправить</button>
+    </div>
+  </div>
+</div>

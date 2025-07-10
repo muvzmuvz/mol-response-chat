@@ -1,0 +1,156 @@
+<!-- Поле поиска -->
+
+
+<!-- Выбор маршрута -->
+<div class="route-selector">
+  <label>
+    <select [formControl]="routeControl" class="custom-select">
+      <option *ngFor="let option of routeOptions" [value]="option.id">
+        {{ option.name }}
+      </option>
+    </select>
+  </label>
+
+  <!-- Отображение выбранного маршрута -->
+  <p tuiTextfieldSize="m" class="filters">
+    <tui-textfield class="input">
+      <label [style.width.px]="100" tuiLabel>Поиск по таблице</label>
+      <input tuiTextfield [size]="size" [style.width.px]="300" placeholder="Введите для поиска..." [(ngModel)]="search"
+        class="search-input" />
+    </tui-textfield>
+  </p>
+  <button tuiButton appearance="primary" size="m" class="add-route-button" (click)="addRoute()">
+    Добавить маршрут
+  </button>
+</div>
+
+<!-- Таблица маршрутов -->
+<table tuiTable [size]="size" [style.width.%]="95">
+  <thead>
+    <tr>
+      <th tuiTh (click)="onSort('route')" style="cursor:pointer">
+        Маршруты
+        <span *ngIf="sortColumn === 'route'" >{{ sortDirection === 'asc' ? '▲' : '▼' }} </span>
+      </th>
+      <th tuiTh (click)="onSort('organization')" style="cursor:pointer">
+        Организация
+        <span *ngIf="sortColumn === 'organization'" >{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th tuiTh (click)="onSort('phone')" style="cursor:pointer">
+        Номер телефона
+        <span *ngIf="sortColumn === 'phone'" >{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th tuiTh (click)="onSort('status')" style="cursor:pointer">
+        Статус
+        <span *ngIf="sortColumn === 'status'" >{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+        
+      <th tuiTh>
+        Комментарий
+      </th>
+      <th tuiTh>
+        Действия
+      </th>
+    </tr>
+  </thead>
+  <tbody tuiTbody>
+    <tr *ngFor="let item of filteredData">
+      <td tuiTd>
+        <div [tuiCell]="size">
+          <span tuiTitle>
+            {{ item.checkbox.title }}
+            <span tuiSubtitle *ngIf="item.checkbox.subtitle">{{ item.checkbox.subtitle }}</span>
+          </span>
+        </div>
+      </td>
+      <td tuiTd>
+        <div [tuiCell]="size">
+          <span tuiTitle>
+            {{ item.title.title }}
+            <span tuiSubtitle *ngIf="item.title.subtitle">{{ item.title.subtitle }}</span>
+          </span>
+        </div>
+      </td>
+      <td tuiTd>
+        <div [tuiCell]="size">
+          <span tuiTitle>
+            {{ item.cell.phone }}
+            <span tuiSubtitle>{{ item.cell.name }}</span>
+          </span>
+        </div>
+      </td>
+      <td tuiTd>
+        <span [tuiStatus]="item.status.color">{{ item.status.value }}</span>
+      </td>
+            <td tuiTd>
+        <span tuiTitle>{{ item.comment }}</span>
+      </td>
+      <td tuiTd>
+        <div class="table-button">
+          <button appearance="action" iconStart="@tui.pencil" size="s" tuiIconButton type="button"
+            (click)="editRoute(item.id)">
+            Изменить
+          </button>
+          <!-- <button appearance="action" iconStart="@tui.ellipsis" size="xs" tuiIconButton type="button">
+          Еще
+        </button> -->
+          <button appearance="error" iconStart="@tui.trash" size="s" tuiIconButton type="button"
+            (click)="deleteRoute(item.id)">
+            Удалить
+          </button>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="modal" *ngIf="isAddModalOpen">
+  <div class="modal-content">
+    <h3>Добавить маршрут</h3>
+    <form [formGroup]="addForm" (ngSubmit)="submitAddForm()">
+      <label>Маршрут: <input formControlName="routeTitle" /></label>
+      <label>Организация: <input formControlName="organization" /></label>
+      <label>Имя: <input formControlName="name" /></label>
+      <label>Телефон: <input formControlName="phone" /></label>
+      <label>Email: <input formControlName="email" /></label>
+      <label>Комментарий: <input formControlName="comment" /></label>
+      <label>Статус:
+        <select formControlName="status">
+          <option>В процессе</option>
+          <option>Выполнено</option>
+          <option>Не выполнено</option>
+        </select>
+      </label>
+      <div class="modal-buttons">
+        <button tuiButton appearance="primary" type="submit">Сохранить</button>
+        <button tuiButton type="button" (click)="cancelModals()">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 🔹 Модалка: Редактировать маршрут -->
+<div class="modal" *ngIf="isEditModalOpen">
+  <div class="modal-content">
+    <h3>Редактировать маршрут</h3>
+    <form [formGroup]="editForm" (ngSubmit)="submitEditForm()">
+      <label>Маршрут: <input formControlName="routeTitle" /></label>
+      <label>Организация: <input formControlName="organization" /></label>
+      <label>Имя: <input formControlName="name" /></label>
+      <label>Телефон: <input formControlName="phone" /></label>
+      <label>Email: <input formControlName="email" /></label>
+      <label>Комментарий: <input formControlName="comment" /></label>
+      <label>Статус:
+        <select formControlName="status">
+          <option>В процессе</option>
+          <option>Выполнено</option>
+          <option>Не выполнено</option>
+        </select>
+      </label>
+      <div class="modal-buttons">
+        <button tuiButton appearance="primary" type="submit">Сохранить</button>
+        <button tuiButton type="button" (click)="cancelModals()">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>

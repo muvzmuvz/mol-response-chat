@@ -1,0 +1,98 @@
+<app-navbar></app-navbar>
+<div class="main-table">
+  <!-- Фильтры -->
+  <div class="filters-row">
+    <!-- Выбор маршрута -->
+    <label>
+      <select [(ngModel)]="route" class="custom-select">
+        <option *ngFor="let option of routeOptions" [value]="option.id">
+          {{ option.name }}
+        </option>
+      </select>
+    </label>
+
+    <!-- Выбор периода с календарём -->
+    <label>
+      <span>Период:</span>
+      <div class="date-range-picker">
+        <!-- Сохраняем как строки даты, а в компоненте конвертим в Date -->
+        <input type="date" [(ngModel)]="dateRange.from" [min]="minDateString" [max]="maxDateString" />
+        <span>—</span>
+        <input type="date" [(ngModel)]="dateRange.to" [min]="minDateString" [max]="maxDateString" />
+      </div>
+    </label>
+
+    <p tuiTextfieldSize="m" class="filters">
+      <tui-textfield class="input">
+        <label [style.width.px]="100" tuiLabel>Поиск по таблице</label>
+        <input tuiTextfield [size]="size" [style.width.px]="300" placeholder="Введите для поиска..."
+          [(ngModel)]="search" class="search-input" />
+      </tui-textfield>
+    </p>
+  </div>
+
+  <div>
+    <!-- Таблица истории -->
+    <table tuiTable [size]="size" [style.width.%]="95">
+      <thead>
+        <tr>
+          <th tuiTh (click)="sortBy('routeTitle')" style="cursor:pointer">
+            Маршрут
+            <span *ngIf="sortColumn === 'routeTitle'">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+          <th tuiTh (click)="sortBy('organization')" style="cursor:pointer">
+            Организация
+            <span *ngIf="sortColumn === 'organization'">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+          <th tuiTh (click)="sortBy('phone')" style="cursor:pointer">
+            Телефон
+            <span *ngIf="sortColumn === 'phone'">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+          <th tuiTh >
+            Комментарий
+
+          </th>
+          <th tuiTh (click)="sortBy('status')" style="cursor:pointer">
+            Статус
+            <span *ngIf="sortColumn === 'status'">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+          <th tuiTh (click)="sortBy('date')" style="cursor:pointer">
+            Дата и время
+            <span *ngIf="sortColumn === 'date'">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+        </tr>
+      </thead>
+
+      <tbody tuiTbody>
+        <tr *ngFor="let item of filteredData">
+          <td tuiTd>{{ item.routeTitle }}</td>
+          <td tuiTd>{{ item.organization }}</td>
+          <td tuiTd>
+            <div [tuiCell]="size">
+              <span tuiTitle>
+                {{ item.phone }}
+                <span tuiSubtitle>{{ item.name }}</span>
+              </span>
+            </div>
+          </td>
+          <td tuiTd>{{ item.comment }}</td>
+          <td tuiTd>
+            <span [tuiStatus]="getStatusColor(item.status)">{{ item.status }}</span>
+          </td>
+          <!-- Выводим дату и время через метод форматирования -->
+          <td tuiTd>{{ formatDateTime(item.date) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

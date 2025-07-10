@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"  # NestJS backend
+      - "4000:4000"  # Angular frontend
+    restart: unless-stopped
+    volumes:
+      - ./backend/data:/app/backend/data   # монтируем папку data для SQLite

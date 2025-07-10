@@ -1,0 +1,13 @@
+<!-- register-page.html -->
+ <app-navbar></app-navbar>
+<div class="auth-form">
+    <h2>Регистрация</h2>
+    <input [(ngModel)]="username" name="username" placeholder="Имя пользователя" />
+    <input [(ngModel)]="password" name="password" type="password" placeholder="Пароль" />
+    <button (click)="register()">Зарегистрироваться</button>
+    <p class="info-text">
+      Есть аккаунт? 
+      <a href="/login">Войти</a>
+    </p>
+    <p *ngIf="message" class="message">{{ message }}</p>
+</div>

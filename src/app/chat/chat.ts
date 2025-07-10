@@ -18,7 +18,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     username: string;
     text: string;
     timestamp?: string;
-    replyTo?: { username: string; text: string; msgIndex: number }[]  // теперь с индексом сообщения
+    replyTo?: { username: string; text: string; msgIndex: number }[]
   }[] = [];
 
   newMessage = '';
@@ -28,17 +28,14 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   typingUsers: Set<string> = new Set();
   array = Array;
   private subscriptions: Subscription[] = [];
-  private typingTimeout?: any;
+  private typingTimeouts: Map<string, any> = new Map();
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   private shouldScroll = false;
 
-  // Массив с ответами (цитатами) для отправки
   replyToList: { username: string; text: string; msgIndex: number }[] = [];
   showReplyButtonIndex: number | null = null;
-
-  // Индекс сообщения, которое подсвечено
   highlightedMessageIndex: number | null = null;
 
   constructor(private chatService: ChatService, private auth: AuthService, private router: Router) { }
@@ -67,13 +64,35 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.shouldScroll = true;
         }
       }),
-      this.chatService.onTyping().subscribe((usernameTyping: string) => {
-        if (usernameTyping && usernameTyping !== this.username) {
-          this.typingUsers.add(usernameTyping);
-          clearTimeout(this.typingTimeout);
-          this.typingTimeout = setTimeout(() => {
-            this.typingUsers.delete(usernameTyping);
+      this.chatService.onTyping().subscribe((usernameTyping: any) => {
+        console.log('Получено событие typing (исходные данные):', usernameTyping, 'тип:', typeof usernameTyping);
+
+        let cleanUsername = usernameTyping;
+
+        // Если приходит не строка, а бинарный буфер (например Uint8Array или ArrayBuffer), декодируем его в строку UTF-8
+        if (usernameTyping instanceof Uint8Array || usernameTyping instanceof ArrayBuffer) {
+          cleanUsername = new TextDecoder('utf-8').decode(
+            usernameTyping instanceof Uint8Array
+              ? usernameTyping
+              : new Uint8Array(usernameTyping)
+          );
+          console.log('Декодированное имя:', cleanUsername);
+        }
+
+        if (cleanUsername && cleanUsername !== this.username) {
+          this.typingUsers.add(cleanUsername);
+          // Очищаем таймаут для этого пользователя
+          if (this.typingTimeouts.has(cleanUsername)) {
+            clearTimeout(this.typingTimeouts.get(cleanUsername));
+          }
+
+          // Таймаут удаления "печатает" через 3 секунды
+          const timeout = setTimeout(() => {
+            this.typingUsers.delete(cleanUsername);
+            this.typingTimeouts.delete(cleanUsername);
           }, 3000);
+
+          this.typingTimeouts.set(cleanUsername, timeout);
         }
       })
     );
@@ -98,7 +117,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    clearTimeout(this.typingTimeout);
+    this.typingTimeouts.forEach(timeout => clearTimeout(timeout));
   }
 
   setName() {
@@ -119,7 +138,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     this.chatService.sendMessage(message);
     this.newMessage = '';
-    this.replyToList = []; // очищаем цитаты после отправки
+    this.replyToList = [];
   }
 
   onInput() {
@@ -131,7 +150,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.showReplyButtonIndex = index;
   }
 
-  // Добавляем новое сообщение в массив цитат (если его там нет)
   replyToMessage(index: number) {
     const msg = this.messages[index];
     const exists = this.replyToList.find(r => r.text === msg.text && r.username === msg.username);
@@ -141,12 +159,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.showReplyButtonIndex = null;
   }
 
-  // Удаляем цитату из списка по индексу
   cancelReply(index: number) {
     this.replyToList.splice(index, 1);
   }
 
-  // Скроллим к сообщению по индексу и подсвечиваем его
   scrollToMessage(index: number) {
     const element = document.getElementById('msg-' + index);
     if (element) {

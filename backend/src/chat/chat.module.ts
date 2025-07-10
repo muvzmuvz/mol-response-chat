@@ -1,3 +1,4 @@
+// chat.module.ts
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
@@ -15,4 +16,4 @@ import { WsAuthGuard } from './ws-auth.guard';
   ],
   providers: [ChatGateway, ChatService, WsAuthGuard],
 })
-export class ChatModule { }
+export class ChatModule {}

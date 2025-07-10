@@ -1,3 +1,4 @@
+// chat.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { io, Socket } from 'socket.io-client';
@@ -91,5 +92,3 @@ export class ChatService {
     });
   }
 }
-
-

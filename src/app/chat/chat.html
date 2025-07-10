@@ -1,20 +1,28 @@
+
+<html>
+    <meta charset="UTF-8">
+</html>
+
 <div class="chat-container">
   <h2>Чат</h2>
 
   <div *ngIf="isNamed">
 
     <div class="messages" #messagesContainer
-      style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-      <div *ngFor="let msg of messages; let i = index" class="message"
-        [ngClass]="msg.username === username ? 'user' : 'other'" (contextmenu)="onRightClick($event, i)">
+      style="max-height: 500px; min-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+      <div *ngFor="let msg of messages; let i = index" class="message" [id]="'msg-' + i" [ngClass]="{
+             'user': msg.username === username,
+             'other': msg.username !== username,
+             'highlighted': highlightedMessageIndex === i
+           }" (contextmenu)="onRightClick($event, i)">
 
         <strong>{{ msg.username }}:</strong>
         <div>{{ msg.text }}</div>
 
-        <!-- Показываем цитату под сообщением -->
+        <!-- Цитаты (ответы) под сообщением -->
         <div *ngIf="msg.replyTo?.length">
-          <!-- Для каждого элемента replyTo создаём отдельный блок -->
-          <div *ngFor="let rep of msg.replyTo" class="reply-quote">
+          <div *ngFor="let rep of msg.replyTo" class="reply-quote" (click)="scrollToMessage(rep.msgIndex)"
+            style="cursor:pointer; user-select:none;">
             <em>Ответ на {{ rep.username }}: "{{ rep.text | slice:0:30 }}..."</em>
           </div>
         </div>
@@ -23,10 +31,10 @@
       </div>
     </div>
 
-    <!-- Блок с несколькими цитатами над полем ввода -->
+    <!-- Цитаты, на которые отвечаем, над полем ввода -->
     <div *ngIf="replyToList.length > 0" class="reply-to-container">
       <div *ngFor="let rep of replyToList; let i = index" class="reply-to-text-container">
-        <div class="reply-to-text">
+        <div class="reply-to-text" (click)="scrollToMessage(rep.msgIndex)" style="cursor:pointer; user-select:none;">
           <strong>Ответ на {{ rep.username }}:</strong> {{ rep.text | slice:0:50 }}...
         </div>
         <button class="cancel-reply" (click)="cancelReply(i)">×</button>

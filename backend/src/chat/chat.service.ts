@@ -1,4 +1,4 @@
-// chat/chat.service.ts
+// chat.service.ts
 import { Injectable } from '@nestjs/common';
 import { MessageDto } from './dto/message.dto';
 

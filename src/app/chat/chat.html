@@ -1,18 +1,47 @@
 <div class="chat-container">
   <h2>Чат</h2>
 
-
-
   <div *ngIf="isNamed">
-    <div class="messages" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-      <div *ngFor="let msg of messages" class="message" [ngClass]="msg.username === username ? 'user' : 'other'">
-        <strong>{{ msg.username }}:</strong> {{ msg.text }}
+
+    <div class="messages" #messagesContainer
+      style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+      <div *ngFor="let msg of messages; let i = index" class="message"
+        [ngClass]="msg.username === username ? 'user' : 'other'" (contextmenu)="onRightClick($event, i)">
+
+        <strong>{{ msg.username }}:</strong>
+        <div>{{ msg.text }}</div>
+
+        <!-- Показываем цитату под сообщением -->
+        <div *ngIf="msg.replyTo?.length">
+          <!-- Для каждого элемента replyTo создаём отдельный блок -->
+          <div *ngFor="let rep of msg.replyTo" class="reply-quote">
+            <em>Ответ на {{ rep.username }}: "{{ rep.text | slice:0:30 }}..."</em>
+          </div>
+        </div>
+
+        <button *ngIf="showReplyButtonIndex === i" class="reply-button" (click)="replyToMessage(i)">Ответить</button>
+      </div>
+    </div>
+
+    <!-- Блок с несколькими цитатами над полем ввода -->
+    <div *ngIf="replyToList.length > 0" class="reply-to-container">
+      <div *ngFor="let rep of replyToList; let i = index" class="reply-to-text-container">
+        <div class="reply-to-text">
+          <strong>Ответ на {{ rep.username }}:</strong> {{ rep.text | slice:0:50 }}...
+        </div>
+        <button class="cancel-reply" (click)="cancelReply(i)">×</button>
       </div>
     </div>
 
     <div class="input" style="margin-top: 10px;">
-      <input [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" placeholder="Введите сообщение..." />
+      <input [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" (input)="onInput()"
+        placeholder="Введите сообщение..." />
       <button (click)="sendMessage()">Отправить</button>
     </div>
+
+    <div class="typing-indicator" *ngIf="typingUsers.size > 0">
+      <em>{{ array.from(typingUsers).join(', ') }} печатает...</em>
+    </div>
+
   </div>
 </div>

@@ -1,4 +1,3 @@
-// chat.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { io, Socket } from 'socket.io-client';
@@ -44,6 +43,12 @@ export class ChatService {
     }
   }
 
+  sendTyping(username: string) {
+    if (this.isBrowser) {
+      this.socket.emit('typing', username);
+    }
+  }
+
   onNewMessage(): Observable<any> {
     return new Observable(observer => {
       if (this.isBrowser) {
@@ -72,32 +77,19 @@ export class ChatService {
     });
   }
 
-  onUserJoined(): Observable<string> {
+  onTyping(): Observable<string> {
     return new Observable(observer => {
       if (this.isBrowser) {
-        this.socket.on('userJoined', (username: string) => {
+        this.socket.on('typing', (username: string) => {
           observer.next(username);
         });
       }
 
       return () => {
-        if (this.isBrowser) this.socket.off('userJoined');
-      };
-    });
-  }
-
-  onUserLeft(): Observable<string> {
-    return new Observable(observer => {
-      if (this.isBrowser) {
-        this.socket.on('userLeft', (username: string) => {
-          observer.next(username);
-        });
-      }
-
-      return () => {
-        if (this.isBrowser) this.socket.off('userLeft');
+        if (this.isBrowser) this.socket.off('typing');
       };
     });
   }
 }
+
 

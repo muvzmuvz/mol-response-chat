@@ -30,21 +30,25 @@
     <tr>
       <th tuiTh (click)="onSort('route')" style="cursor:pointer">
         Маршруты
-        <span *ngIf="sortColumn === 'route'" >{{ sortDirection === 'asc' ? '▲' : '▼' }} </span>
+        <span *ngIf="sortColumn === 'route'">{{ sortDirection === 'asc' ? '▲' : '▼' }} </span>
       </th>
       <th tuiTh (click)="onSort('organization')" style="cursor:pointer">
         Организация
-        <span *ngIf="sortColumn === 'organization'" >{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+        <span *ngIf="sortColumn === 'organization'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
       </th>
       <th tuiTh (click)="onSort('phone')" style="cursor:pointer">
-        Номер телефона
-        <span *ngIf="sortColumn === 'phone'" >{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+        Номер телефона 1
+        <span *ngIf="sortColumn === 'phone'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th tuiTh (click)="onSort('phone2')"  style="cursor:pointer">
+        Номер телефона 2
+        <span *ngIf="sortColumn === 'phone2'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
       </th>
       <th tuiTh (click)="onSort('status')" style="cursor:pointer">
         Статус
-        <span *ngIf="sortColumn === 'status'" >{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+        <span *ngIf="sortColumn === 'status'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
       </th>
-        
+
       <th tuiTh>
         Комментарий
       </th>
@@ -59,7 +63,7 @@
         <div [tuiCell]="size">
           <span tuiTitle>
             {{ item.checkbox.title }}
-            <span tuiSubtitle *ngIf="item.checkbox.subtitle">{{ item.checkbox.subtitle }}</span>
+
           </span>
         </div>
       </td>
@@ -67,7 +71,8 @@
         <div [tuiCell]="size">
           <span tuiTitle>
             {{ item.title.title }}
-            <span tuiSubtitle *ngIf="item.title.subtitle">{{ item.title.subtitle }}</span>
+            <span tuiSubtitle>{{ item.title.subtitle }}</span>
+
           </span>
         </div>
       </td>
@@ -79,10 +84,18 @@
           </span>
         </div>
       </td>
+      <td tuiTd >
+        <div [tuiCell]="size">
+          <span tuiTitle>
+            {{ item.cell.phone2 }}
+            <span tuiSubtitle>{{ item.cell.name2 }}</span>
+          </span>
+        </div>
+      </td>
       <td tuiTd>
         <span [tuiStatus]="item.status.color">{{ item.status.value }}</span>
       </td>
-            <td tuiTd>
+      <td tuiTd>
         <span tuiTitle>{{ item.comment }}</span>
       </td>
       <td tuiTd>
@@ -110,10 +123,16 @@
     <form [formGroup]="addForm" (ngSubmit)="submitAddForm()">
       <label>Маршрут: <input formControlName="routeTitle" /></label>
       <label>Организация: <input formControlName="organization" /></label>
+      
       <label>Имя: <input formControlName="name" /></label>
       <label>Телефон: <input formControlName="phone" /></label>
+      
+      <label *ngIf="isAddNewContact">Имя второго продавца: <input formControlName="name2" /></label>
+      <label *ngIf="isAddNewContact">Телефон второго продавца: <input formControlName="phone2" /></label>
+      <button class="new-phone" (click)="addNewPhone()" *ngIf="isButtonActive" >+ Добавить номер</button>
       <label>Email: <input formControlName="email" /></label>
       <label>Комментарий: <input formControlName="comment" /></label>
+      <label>Дополнительная информация: <input formControlName="subtitle" /></label>
       <label>Статус:
         <select formControlName="status">
           <option>В процессе</option>
@@ -136,12 +155,16 @@
     <form [formGroup]="editForm" (ngSubmit)="submitEditForm()">
       <label>Маршрут: <input formControlName="routeTitle" /></label>
       <label>Организация: <input formControlName="organization" /></label>
-      <label>Имя: <input formControlName="name" /></label>
-      <label>Телефон: <input formControlName="phone" /></label>
+      <label>Имя первого продавца: <input formControlName="name" /></label>
+      <label>Телефон первого продавца: <input formControlName="phone" /></label>
+      <label *ngIf="editForm.get('name2')?.value">Имя второго продавца: <input formControlName="name2" /></label>
+      <label *ngIf="editForm.get('phone2')?.value">Телефон второго продавца: <input formControlName="phone2" /></label>
       <label>Email: <input formControlName="email" /></label>
       <label>Комментарий: <input formControlName="comment" /></label>
+      <label>Дополнительная информация: <input formControlName="subtitle" /></label>
       <label>Статус:
         <select formControlName="status">
+          
           <option>В процессе</option>
           <option>Выполнено</option>
           <option>Не выполнено</option>

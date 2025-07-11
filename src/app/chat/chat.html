@@ -1,28 +1,86 @@
 <div class="chat-container">
+  <!-- Контекстное меню -->
+  <div *ngIf="contextMenuVisible" class="context-menu" [style.top.px]="contextMenuPosition.y"
+    [style.left.px]="contextMenuPosition.x">
+
+    <!-- Если режим выбора активен, показываем только этот пункт -->
+    <ng-container *ngIf="showSelectionMode; else normalMenu">
+      <div class="context-menu-item" (click)="replyToSelectedMessages()">
+        Ответить на выбранные
+      </div>
+      <div class="context-menu-item" (click)="finishSelectMessages()">
+        Отмена выбора
+      </div>
+    </ng-container>
+
+    <ng-template #normalMenu>
+      <div class="context-menu-item">
+        <strong>Реакция:</strong>
+      </div>
+      <div class="context-menu-emoji-list">
+        <span class="context-menu-emoji" *ngFor="let emoji of reactionEmojis" (click)="addReactionToMessage(emoji)">
+          {{emoji}}
+        </span>
+      </div>
+
+      <div class="context-menu-item" (click)="startSelectMessages()">
+        Выбрать сообщения
+      </div>
+
+      <div class="context-menu-item" (click)="replyToMessage(contextMenuMessageIndex!)">
+        Ответить
+      </div>
+    </ng-template>
+  </div>
+
   <h2>Чат</h2>
 
   <div *ngIf="isNamed">
     <div class="messages" #messagesContainer
-      style="max-height: 500px; min-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-      <div *ngFor="let msg of messages; let i = index" class="message" [id]="'msg-' + i" [ngClass]="{
-              user: isMyMessage(msg.userId),
-              other: !isMyMessage(msg.userId),
-              highlighted: highlightedMessageIndex === i
-            }" (contextmenu)="onRightClick($event, i)">
+      style="max-height: 500px !important; min-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
 
-        <strong>{{ msg.username }}:</strong>
-        <div>{{ msg.text }}</div>
-
-        <!-- Цитаты (ответы) под сообщением -->
-        <div *ngIf="msg.replyTo?.length">
-          <div *ngFor="let rep of msg.replyTo" class="reply-quote" (click)="scrollToMessage(rep.msgIndex)"
-            style="cursor:pointer; user-select:none;">
-            <em>Ответ на {{ rep.username }}: "{{ rep.text | slice:0:30 }}..."</em>
-          </div>
+      <!-- Новая структура с отдельной колонкой для чекбоксов -->
+      <div *ngFor="let msg of messages; let i = index" class="message-row">
+        <!-- Колонка с чекбоксом -->
+        <div class="checkbox-column" *ngIf="showSelectionMode">
+          <input type="checkbox" class="select-checkbox" id="select-msg-{{i}}" [checked]="selectedMessages.has(i)"
+            (change)="toggleSelectMessage(i)" />
+          <label for="select-msg-{{i}}"></label>
         </div>
 
-        <button *ngIf="showReplyButtonIndex === i" class="reply-button" (click)="replyToMessage(i)">Ответить</button>
+        <div class="message-content" [id]="'msg-' + i" [ngClass]="{
+                user: isMyMessage(msg.userId),
+                other: !isMyMessage(msg.userId),
+                highlighted: highlightedMessageIndex === i
+              }" (contextmenu)="onRightClick($event, i)">
+          <strong>{{ msg.username }}:</strong>
+          <div>{{ msg.text }}</div>
+
+          <!-- Реакции -->
+          <div *ngIf="msg.reactions" style="margin-top: 4px; font-size: 0.85rem;">
+            <span *ngFor="let key of objectKeys(msg.reactions)" style="margin-right: 8px;">
+              {{key}} {{msg.reactions[key]}}
+            </span>
+          </div>
+
+          <!-- Цитаты (ответы) -->
+          <div *ngIf="msg.replyTo?.length">
+            <div *ngFor="let rep of msg.replyTo" class="reply-quote" (click)="scrollToMessage(rep.msgIndex)"
+              style="cursor:pointer; user-select:none;">
+              <em>Ответ на {{ rep.username }}: "{{ rep.text | slice:0:30 }}..."</em>
+            </div>
+          </div>
+
+          <button *ngIf="showReplyButtonIndex === i" class="reply-button" (click)="replyToMessage(i)">Ответить</button>
+        </div>
       </div>
+    </div>
+
+    <!-- Панель с кнопками для режима выбора -->
+    <div *ngIf="showSelectionMode" style="margin: 8px 0; display: flex; gap: 12px;">
+      <button [disabled]="selectedMessages.size === 0" (click)="replyToSelectedMessages()">Ответить на
+        выбранные</button>
+      <button (click)="finishSelectMessages()">Отмена выбора</button>
     </div>
 
     <!-- Цитаты, на которые отвечаем, над полем ввода -->
@@ -35,10 +93,17 @@
       </div>
     </div>
 
-    <div class="input" style="margin-top: 10px;">
+    <div class="input" style="margin-top: 10px; position: relative;">
       <input [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" (input)="onInput()"
         placeholder="Введите сообщение..." />
+
+      <button type="button" class="emoji-toggle-button" (click)="toggleEmojiPicker()" title="Выбрать эмодзи">😊</button>
+
       <button (click)="sendMessage()">Отправить</button>
+
+      <div class="emoji-picker" *ngIf="showEmojiPicker">
+        <span class="emoji" *ngFor="let emoji of emojis" (click)="addEmoji(emoji)">{{emoji}}</span>
+      </div>
     </div>
 
     <div class="typing-indicator" *ngIf="typingUsers.size > 0">

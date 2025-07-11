@@ -18,7 +18,13 @@ export class Client {
 
   @Column()
   phone: string;
+  @Column()
+  name2: string;
 
+  @Column()
+  phone2: string;
+  @Column()
+  subtitle: string;
   @Column()
   email: string;
 

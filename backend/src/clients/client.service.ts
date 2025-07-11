@@ -12,6 +12,9 @@ interface CreateClientDto {
     organization: string;
     name: string;
     phone: string;
+    name2: string;
+    phone2: string;
+    subtitle: string;
     email: string;
     status: string;
     comment?: string; // Новый параметр комментария
@@ -23,6 +26,9 @@ interface UpdateClientDto {
     organization?: string;
     name?: string;
     phone?: string;
+    name2?: string;
+    phone2?: string;
+    subtitle?: string;
     email?: string;
     status?: string;
     comment?: string; // Новый параметр комментария
@@ -35,7 +41,7 @@ export class ClientService {
         private repo: Repository<Client>,
         private routeService: RouteService,
         private historyService: HistoryService
-    ) {}
+    ) { }
 
     // Создание клиента
     async create(dto: CreateClientDto) {
@@ -56,6 +62,9 @@ export class ClientService {
             status: dto.status,
             comment: dto.comment ?? '', // Сохраняем комментарий, если передан
             route,
+            name2: dto.name2,
+            phone2: dto.phone2,
+            subtitle: dto.subtitle
         });
 
         const savedClient = await this.repo.save(client);
@@ -95,7 +104,10 @@ export class ClientService {
         client.phone = dto.phone ?? client.phone;
         client.email = dto.email ?? client.email;
         client.status = dto.status ?? client.status;
-        client.comment = dto.comment ?? client.comment; // Обновляем комментарий
+        client.comment = dto.comment ?? client.comment;
+        client.phone2 = dto.phone2 ?? client.phone2;
+        client.name2 = dto.name2 ?? client.name2;
+        client.subtitle = dto.subtitle ?? client.subtitle // Обновляем комментарий
 
         await this.repo.save(client);
 

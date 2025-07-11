@@ -15,17 +15,29 @@ import { Router } from '@angular/router';
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   messages: {
-    userId: string;       // Добавлен userId
+    userId: string;
     username: string;
     text: string;
     timestamp?: string;
-    replyTo?: { username: string; text: string; msgIndex: number }[]
+    replyTo?: { username: string; text: string; msgIndex: number }[];
+    reactions?: { [emoji: string]: number };
   }[] = [];
 
   newMessage = '';
   username = '';
-  userId = '';  // Добавляем userId текущего пользователя
+  userId = '';
   isNamed = false;
+
+  // Новые поля для контекстного меню и выбора сообщений
+  contextMenuVisible = false;
+  contextMenuPosition = { x: 0, y: 0 };
+  contextMenuMessageIndex: number | null = null;
+
+  selectedMessages: Set<number> = new Set();
+  showSelectionMode = false;
+
+  // Эмодзи для реакций в контекстном меню
+  reactionEmojis: string[] = ['😀', '😂', '😊', '😍', '😎', '😢', '😡', '👍', '🙏', '🎉', '❤️', '🔥', '🌟'];
 
   typingUsers: Set<string> = new Set();
   array = Array;
@@ -40,6 +52,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   showReplyButtonIndex: number | null = null;
   highlightedMessageIndex: number | null = null;
 
+  // Помогает перебрать ключи объекта реакций в шаблоне
+  objectKeys = Object.keys;
+
   constructor(private chatService: ChatService, private auth: AuthService, private router: Router) { }
 
   ngOnInit(): void {
@@ -49,7 +64,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     const username = this.auth.getUsernameFromToken();
-    const userId = this.auth.getUserIdFromToken();  // Метод должен возвращать ID из токена
+    const userId = this.auth.getUserIdFromToken();
     if (!username || !userId) {
       this.router.navigate(['/login']);
       return;
@@ -62,7 +77,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.subscriptions.push(
       this.chatService.onNewMessage().subscribe((msg) => {
         if (msg) {
-          // Сообщение уже содержит userId, username
           msg.username = this.normalizeUsername(msg.username);
           this.messages.push(msg);
           this.shouldScroll = true;
@@ -109,6 +123,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     );
 
     this.chatService.requestMessages();
+
+    // Подписка на клик вне контекстного меню для его закрытия
+    document.addEventListener('click', this.onDocumentClick.bind(this));
   }
 
   ngAfterViewChecked(): void {
@@ -129,6 +146,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.typingTimeouts.forEach(timeout => clearTimeout(timeout));
+    document.removeEventListener('click', this.onDocumentClick.bind(this));
   }
 
   setName() {
@@ -156,9 +174,94 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.chatService.sendTyping(this.username);
   }
 
+  // Открытие контекстного меню при правом клике
   onRightClick(event: MouseEvent, index: number) {
     event.preventDefault();
-    this.showReplyButtonIndex = index;
+
+    // Если сейчас включен режим выбора — показывать контекстное меню НЕ НАД отдельным сообщением, а над кнопкой
+    if (this.showSelectionMode) {
+      // Скрываем контекстное меню, чтобы не путать пользователя
+      this.contextMenuVisible = false;
+      return;
+    }
+
+    this.contextMenuVisible = true;
+    this.contextMenuPosition = { x: event.clientX, y: event.clientY };
+    this.contextMenuMessageIndex = index;
+  }
+
+  // Начать режим выбора сообщений (при клике в меню)
+  startSelectMessages() {
+    this.showSelectionMode = true;
+    this.selectedMessages.clear();
+    this.closeContextMenu(); // скрыть меню
+  }
+
+  // Выбор/снятие выбора сообщения в режиме выбора
+  toggleSelectMessage(index: number) {
+    if (this.selectedMessages.has(index)) {
+      this.selectedMessages.delete(index);
+    } else {
+      this.selectedMessages.add(index);
+    }
+  }
+
+  // Завершить режим выбора
+  finishSelectMessages() {
+    this.showSelectionMode = false;
+    this.selectedMessages.clear();
+    this.closeContextMenu();
+  }
+
+  // Ответить на выбранные сообщения
+  replyToSelectedMessages() {
+    if (this.selectedMessages.size === 0) return;
+
+    this.replyToList = [];
+
+    this.selectedMessages.forEach(index => {
+      const msg = this.messages[index];
+      const exists = this.replyToList.find(r => r.text === msg.text && r.username === msg.username);
+      if (!exists) {
+        this.replyToList.push({ username: msg.username, text: msg.text, msgIndex: index });
+      }
+    });
+
+    this.showSelectionMode = false;
+    this.selectedMessages.clear();
+    this.closeContextMenu();
+  }
+
+  // Закрываем меню и очищаем выбранные сообщения
+  closeContextMenu() {
+    this.contextMenuVisible = false;
+    this.contextMenuMessageIndex = null;
+  }
+
+  // Добавить реакцию эмоджи к сообщению
+  addReactionToMessage(emoji: string) {
+    if (this.contextMenuMessageIndex === null) return;
+
+    const msg = this.messages[this.contextMenuMessageIndex];
+
+    if (!msg.reactions) {
+      msg.reactions = {};
+    }
+
+    if (msg.reactions[emoji]) {
+      msg.reactions[emoji]++;
+    } else {
+      msg.reactions[emoji] = 1;
+    }
+
+    this.closeContextMenu();
+  }
+
+  // Закрываем контекстное меню при клике вне
+  onDocumentClick(event: MouseEvent) {
+    if (this.contextMenuVisible) {
+      this.closeContextMenu();
+    }
   }
 
   replyToMessage(index: number) {
@@ -187,17 +290,25 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  // Нормализация имени (оставляем для совместимости)
   private normalizeUsername(name: string): string {
     if (!name) return '';
-    // Нормализуем и просто убираем пробелы по краям
     return name.normalize('NFC').trim();
   }
 
-  // Сравниваем userId для определения, чье это сообщение
   isMyMessage(msgUserId: string): boolean {
     if (!msgUserId || !this.userId) return false;
-
     return msgUserId === this.userId;
+  }
+
+  showEmojiPicker = false;
+  emojis: string[] = ['😀', '😂', '😊', '😍', '😎', '😢', '😡', '👍', '🙏', '🎉', '❤️', '🔥', '🌟'];
+
+  toggleEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  addEmoji(emoji: string) {
+    this.newMessage += emoji;
+    this.showEmojiPicker = false;
   }
 }

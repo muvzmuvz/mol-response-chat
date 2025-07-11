@@ -1,4 +1,4 @@
-// Основной контейнер панели фильтров
+// 🔷 Основной контейнер панели фильтров
 .filters-panel {
   display: flex;
   flex-wrap: wrap;
@@ -13,7 +13,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-// Стиль выпадающего списка маршрутов
+// 🔷 Стиль выпадающего списка маршрутов
 .custom-select {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
@@ -29,24 +29,26 @@
   }
 }
 
-// Обёртка для поля поиска
+// 🔷 Обёртка для поля поиска
 .search-wrapper {
   display: flex;
   flex-direction: column;
 }
 
-// Метка над полем поиска
+// 🔷 Метка над полем поиска
 .search-label {
   margin-bottom: 4px;
   font-size: 14px;
   color: #374151;
   font-weight: 500;
 }
-.add-route-button{
+
+.add-route-button {
   margin-bottom: 16px;
   align-self: flex-end;
 }
-// Само поле поиска
+
+// 🔷 Само поле поиска
 .search-input {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
@@ -66,6 +68,8 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
   }
 }
+
+// 🔷 Селектор маршрута
 .route-selector {
   display: flex;
   align-items: center;
@@ -73,66 +77,132 @@
   margin-bottom: 16px;
 }
 
+.filters {
+  width: 300px;
+}
+
+.table-button {
+  display: flex;
+  max-width: 100%;
+  gap: 10px;
+}
+
+.new-phone {
+  cursor: pointer;
+  border: none;
+  background-color: #ffffff;
+  margin: 0px 0px;
+  color: #333;
+  font-size: 14px;
+
+  &:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+}
+
+// 🔷 Модальное окно (затемнённый фон)
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3); // прозрачный фон
+  background: rgba(0, 0, 0, 0.4); // затемнение
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 }
 
+// 🔷 Контейнер модального окна
 .modal-content {
-  background: #fff;
-  padding: 24px 32px;
-  border-radius: 12px;
-  width: 400px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+
+  h3 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+
+  form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    color: #374151;
+    gap: 6px;
+
+    input,
+    select {
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      background-color: #fff;
+      transition: border 0.3s, box-shadow 0.3s;
+
+      &:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+
+      &::placeholder {
+        color: #9ca3af;
+        font-style: italic;
+      }
+    }
+  }
 }
 
-.modal-content h3 {
-  margin: 0 0 8px;
-  font-size: 20px;
-  font-weight: bold;
-  color: #222;
-}
-
-.modal-content label {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  color: #333;
-  gap: 4px;
-}
-
-.modal-content input,
-.modal-content select {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-}
-
+// 🔷 Кнопки модального окна
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-.filters{
-  width: 300px;
+  grid-column: span 2;
+  gap: 12px;
+  margin-top: 8px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    grid-column: span 1;
+  }
+
+  button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
 }
 
-.table-button{
-  display: flex;
-  max-width: 100%;
-  gap:10px
+// 🔷 Адаптация по высоте
+@media (max-height: 500px) {
+  .modal-content {
+    padding: 24px;
+    max-height: 85vh;
+  }
 }

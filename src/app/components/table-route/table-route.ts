@@ -6,10 +6,7 @@ import {
   TuiAutoColorPipe, TuiButton, TuiDropdown, TuiIcon, TuiInitialsPipe, TuiLink,
   TuiTitle, tuiItemsHandlersProvider, TuiTextfield, TuiLabel, TuiDialog
 } from '@taiga-ui/core';
-import {
-  TuiAvatar, TuiBadge, TuiCheckbox, TuiChip, TuiItemsWithMore,
-  TuiProgressBar, TuiRadioList, TuiStatus,
-} from '@taiga-ui/kit';
+import { TuiAvatar, TuiBadge, TuiCheckbox, TuiChip, TuiItemsWithMore, TuiProgressBar, TuiRadioList, TuiStatus, TuiDataListWrapperComponent } from '@taiga-ui/kit';
 import { TuiCell } from '@taiga-ui/layout';
 import { TuiTable, TuiTableFilters } from '@taiga-ui/addon-table';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +20,8 @@ import { OnInit } from '@angular/core';
     TuiBadge, TuiButton, TuiCell, TuiCheckbox, TuiChip, TuiDropdown,
     TuiIcon, TuiInitialsPipe, TuiItemsWithMore, TuiLink, TuiProgressBar,
     TuiRadioList, TuiStatus, TuiTable, TuiTableFilters, TuiTitle,
-    FormsModule, TuiLabel, TuiTextfield, TuiDialog
+    FormsModule, TuiLabel, TuiTextfield, TuiDialog,
+    TuiDataListWrapperComponent
   ],
   templateUrl: './table-route.html',
   styleUrl: './table-route.less',
@@ -36,7 +34,7 @@ import { OnInit } from '@angular/core';
 })
 export class TableRoute implements OnInit {
   constructor(private clientService: ClientService) { }
-
+  isAddNewContact = false;
   protected data: any[] = [];
   protected routeOptions: { id: string; name: string }[] = [];
   protected search = '';
@@ -63,8 +61,15 @@ export class TableRoute implements OnInit {
       this.sortDirection = 'asc';
     }
   }
+  isButtonActive = true;
 
+  addNewPhone() {
+    this.isAddNewContact = true;
+    if (this.isAddNewContact = true) {
+      this.isButtonActive = false;
+    }
 
+  }
   protected readonly form = new FormGroup({
     route: new FormControl<string>('all'),
   });
@@ -100,9 +105,11 @@ export class TableRoute implements OnInit {
       title: {
         icon: '@tui.user',
         title: dto.organization,
-        subtitle: 'Дополнительная информация',
+        subtitle: dto['subtitle'],
       },
       cell: {
+        name2: dto.name2,
+        phone2: dto.phone2,
         name: dto.name,
         phone: dto.phone,
         email: dto.email,
@@ -134,6 +141,9 @@ export class TableRoute implements OnInit {
         this.isMatch(item.title.title, searchTerm) ||
         this.isMatch(item.cell.name, searchTerm) ||
         this.isMatch(item.cell.phone, searchTerm) ||
+        this.isMatch(item.cell.name2, searchTerm) ||
+        this.isMatch(item.cell.phone2, searchTerm) ||
+        this.isMatch(item.cell.subtitle, searchTerm) ||
         this.isMatch(item.status.value, searchTerm)
       );
     }
@@ -185,9 +195,19 @@ export class TableRoute implements OnInit {
     organization: new FormControl('', { nonNullable: true }),
     name: new FormControl('', { nonNullable: true }),
     phone: new FormControl('', { nonNullable: true }),
+    name2: new FormControl('', { nonNullable: true }),
+    phone2: new FormControl('', { nonNullable: true }),
+    subtitle: new FormControl('', { nonNullable: true }),
     email: new FormControl('', { nonNullable: true }),
-    comment: new FormControl('', { nonNullable: true }), // Добавлено поле комментария
-    status: new FormControl('В процессе', { nonNullable: true }),
+    comment: new FormControl('', { nonNullable: true }),
+    status: new FormControl(
+      {
+        label: 'В процессе',
+        value: 'В процессе',
+        color: 'var(--tui-status-warning)',
+      },
+      { nonNullable: true }
+    ),
   });
 
   editForm = new FormGroup({
@@ -195,32 +215,42 @@ export class TableRoute implements OnInit {
     organization: new FormControl('', { nonNullable: true }),
     name: new FormControl('', { nonNullable: true }),
     phone: new FormControl('', { nonNullable: true }),
+    name2: new FormControl('', { nonNullable: true }),
+    phone2: new FormControl('', { nonNullable: true }),
+    subtitle: new FormControl('', { nonNullable: true }),
     email: new FormControl('', { nonNullable: true }),
-    comment: new FormControl('', { nonNullable: true }), // Добавлено поле комментария
-    status: new FormControl('', { nonNullable: true }),
+    comment: new FormControl('', { nonNullable: true }),
+    status: new FormControl(
+      {
+        label: 'В процессе',
+        value: 'В процессе',
+        color: 'var(--tui-status-warning)',
+      },
+      { nonNullable: true }
+    ),
   });
 
   addRoute() {
     this.isAddModalOpen = true;
   }
-
   submitAddForm() {
     if (this.addForm.invalid) return;
 
-    const dto = this.addForm.getRawValue();
-    this.clientService.addRoute(dto).subscribe({
-      next: (added) => {
-        // После успешного добавления маршрута заново загружаем все маршруты
-        this.loadRoutes();
+    const formValue = this.addForm.getRawValue();
+    const dto: CreateClientDto = {
+      ...formValue,
+      status: formValue.status.value, // 💡 ВАЖНО: берем value
+    };
 
-        // Сбрасываем форму и закрываем модальное окно
+    this.clientService.addRoute(dto).subscribe({
+      next: () => {
+        this.loadRoutes();
         this.addForm.reset();
+        this.isButtonActive = true;
+        this.isAddNewContact = false;
         this.isAddModalOpen = false;
       },
-      error: (err) => {
-        console.error('Ошибка добавления:', err);
-        // Можно добавить уведомление пользователю об ошибке
-      }
+      error: (err) => console.error('Ошибка добавления:', err),
     });
   }
   deleteRoute(id: number): void {
@@ -242,23 +272,42 @@ export class TableRoute implements OnInit {
     const item = this.data.find(d => d.id === id);
     if (!item) return;
 
+    const matchedStatus = this.statusOptions.find(opt => opt.value === item.status.value) || this.statusOptions[0];
+
     this.editingRouteId = id;
     this.editForm.setValue({
       routeTitle: item.route.title,
       organization: item.title.title,
       name: item.cell.name,
+      name2: item.cell.name2,
       phone: item.cell.phone,
       email: item.cell.email,
-      status: item.status.value,
+      status: matchedStatus,
       comment: item.comment,
+      phone2: item.cell.phone2,
+      subtitle: item.title.subtitle,
     });
+
     this.isEditModalOpen = true;
   }
+
+  get addFormStatusControl(): FormControl<{ label: string; value: string; color: string }> {
+    return this.addForm.get('status') as FormControl<{ label: string; value: string; color: string }>;
+  }
+  get editFormStatusControl(): FormControl<string> {
+    return this.editForm.get('status') as unknown as FormControl<string>;
+  }
+
 
   submitEditForm() {
     if (this.editingRouteId === null || this.editForm.invalid) return;
 
-    const dto = this.editForm.getRawValue();
+    const formValue = this.editForm.getRawValue();
+    const dto = {
+      ...formValue,
+      status: formValue.status.value, // 💡 вытаскиваем значение
+    };
+
     this.clientService.updateRoute(this.editingRouteId, dto).subscribe({
       next: (updated) => {
         const index = this.data.findIndex(d => d.id === this.editingRouteId);
@@ -268,25 +317,34 @@ export class TableRoute implements OnInit {
         this.isEditModalOpen = false;
         this.editingRouteId = null;
       },
-      error: (err) => console.error('Ошибка обновления:', err)
+      error: (err) => console.error('Ошибка обновления:', err),
     });
   }
+
 
   cancelModals() {
     this.isAddModalOpen = false;
     this.isEditModalOpen = false;
+    this.isButtonActive = true;
+    this.isAddNewContact = false;
     this.addForm.reset();
     this.editForm.reset();
   }
+  statusOptions = [
+    { label: 'В процессе', value: 'В процессе', color: 'var(--tui-status-warning)' },
+    { label: 'Выполнено', value: 'Выполнено', color: 'var(--tui-status-positive)' },
+    { label: 'Не выполнено', value: 'Не выполнено', color: 'var(--tui-status-negative)' },
+  ];
 
-  private getStatusColor(status: string): string {
-    switch (status) {
-      case 'Выполнено':
-        return 'var(--tui-status-positive)';
-      case 'Не выполнено':
-        return 'var(--tui-status-negative)';
-      default:
-        return 'var(--tui-status-warning)';
-    }
+selectedStatus = this.statusOptions[0].value;
+private getStatusColor(status: string): string {
+  switch (status) {
+    case 'Выполнено':
+      return 'var(--tui-status-positive)';
+    case 'Не выполнено':
+      return 'var(--tui-status-negative)';
+    default:
+      return 'var(--tui-status-warning)';
   }
+}
 }

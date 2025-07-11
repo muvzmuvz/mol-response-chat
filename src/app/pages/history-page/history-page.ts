@@ -96,7 +96,10 @@ export class HistoryPage implements OnInit {
             routeTitle,
             organization: client.organization,
             name: client.name,
+            name2:client.name2,
             phone: client.phone,
+            phone2: client.phone2,
+            subtitle: client.subtitle,
             status: entry.status,
             date: entry.date,
             comment: client.comment, // ISO строка с датой и временем

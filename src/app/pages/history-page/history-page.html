@@ -49,12 +49,18 @@
             </span>
           </th>
           <th tuiTh (click)="sortBy('phone')" style="cursor:pointer">
-            Телефон
+            Телефон 1
             <span *ngIf="sortColumn === 'phone'">
               {{ sortDirection === 'asc' ? '▲' : '▼' }}
             </span>
           </th>
-          <th tuiTh >
+          <th tuiTh (click)="sortBy('phone2')" style="cursor:pointer">
+            Телефон 2
+            <span *ngIf="sortColumn === 'phone2'">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+          <th tuiTh>
             Комментарий
 
           </th>
@@ -76,12 +82,27 @@
       <tbody tuiTbody>
         <tr *ngFor="let item of filteredData">
           <td tuiTd>{{ item.routeTitle }}</td>
-          <td tuiTd>{{ item.organization }}</td>
+          <td tuiTd>
+            <div [tuiCell]="size">
+              <span tuiTitle>
+                {{ item.organization }}
+                <span tuiSubtitle>{{ item.subtitle }}</span>
+              </span>
+            </div>
+          </td>
           <td tuiTd>
             <div [tuiCell]="size">
               <span tuiTitle>
                 {{ item.phone }}
                 <span tuiSubtitle>{{ item.name }}</span>
+              </span>
+            </div>
+          </td>
+          <td tuiTd>
+            <div [tuiCell]="size">
+              <span tuiTitle>
+                {{ item.phone2 }}
+                <span tuiSubtitle>{{ item.name2 }}</span>
               </span>
             </div>
           </td>

@@ -3,10 +3,14 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 
 export interface ClientDto {
+  [x: string]: any;
+  phone2: any;
+  name2: any;
   id?: number;
   route: {
     id: number;
     title: string;
+    
   };
   organization: string;
   name: string;
@@ -14,13 +18,17 @@ export interface ClientDto {
   email: string;
   status: string;
   comment: string;
+  subtitle:string;
 }
 
 export interface CreateClientDto {
   routeTitle: string;
   organization: string;
+  subtitle:string;
+  name2:string;
   name: string;
   phone: string;
+  phone2:string;
   email: string;
   status: string;
   comment: string;
